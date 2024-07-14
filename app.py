@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify, make_response
 from database import db
 from models import Admin, Company, Location, Sensor, SensorData
