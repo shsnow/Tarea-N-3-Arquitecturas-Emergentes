@@ -1,58 +1,35 @@
-import sqlite3
+# models.py
+from datetime import datetime
+from database import db
 
-DATABASE = 'database.db'
+class Admin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
 
-def get_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+class Company(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False)
+    company_api_key = db.Column(db.String(100), unique=True, nullable=False)
 
-def init_db():
-    with sqlite3.connect(DATABASE) as conn:
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS admin (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                password TEXT NOT NULL
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS company (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                company_name TEXT NOT NULL,
-                company_api_key TEXT NOT NULL
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS location (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                company_id INTEGER,
-                location_name TEXT NOT NULL,
-                location_country TEXT,
-                location_city TEXT,
-                location_meta TEXT,
-                FOREIGN KEY(company_id) REFERENCES company(id)
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS sensor (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                location_id INTEGER,
-                sensor_name TEXT NOT NULL,
-                sensor_category TEXT,
-                sensor_meta TEXT,
-                sensor_api_key TEXT NOT NULL,
-                FOREIGN KEY(location_id) REFERENCES location(id)
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS sensor_data (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sensor_id INTEGER,
-                timestamp INTEGER,
-                data JSON,
-                FOREIGN KEY(sensor_id) REFERENCES sensor(id)
-            )
-        ''')
-        conn.commit()
+class Location(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    location_name = db.Column(db.String(100), nullable=False)
+    location_country = db.Column(db.String(100), nullable=False)
+    location_city = db.Column(db.String(100), nullable=False)
+    location_meta = db.Column(db.String(200), nullable=True)
+
+class Sensor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
+    sensor_name = db.Column(db.String(100), nullable=False)
+    sensor_category = db.Column(db.String(100), nullable=False)
+    sensor_meta = db.Column(db.String(200), nullable=True)
+    sensor_api_key = db.Column(db.String(100), unique=True, nullable=False)
+
+class SensorData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sensor_id = db.Column(db.Integer, db.ForeignKey('sensor.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    data = db.Column(db.JSON, nullable=False)
